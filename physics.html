@@ -3,73 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Physics JEE Generator - Class 11 & 12</title>
+  <title>Complete JEE Physics Generator - Class 11 & 12</title>
   <link rel="stylesheet" href="style.css">
   <script id="MathJax-script" async src="https://jsdelivr.net"></script>
   <style>
     .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
-    select { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 15px; }
-    .status-bar { display: flex; justify-content: space-between; background: #eef2f5; padding: 10px 15px; border-radius: 6px; font-weight: bold; margin-bottom: 15px; color: #2c3e50; }
-    #solution-box { display: none; background: #f9f9f9; border-left: 4px solid #007bff; padding: 15px; margin-top: 15px; text-align: left; border-radius: 4px; }
-    .question-text { font-size: 17px; line-height: 1.6; text-align: left; margin-bottom: 15px; }
+    select { padding: 10px 12px; border-radius: 10px; border: 2px solid #e2e8f0; font-size: 14px; flex: 1; min-width: 140px; }
+    .status-bar { display: flex; justify-content: space-between; background: #f1f5f9; padding: 10px 15px; border-radius: 10px; font-weight: 600; margin-bottom: 15px; color: #0f172a; font-size: 14px; }
+    #solution-box { display: none; background: #f0fdf4; border-left: 4px solid #16a34a; padding: 15px; margin-top: 15px; text-align: left; border-radius: 8px; color: #14532d; font-size: 14px; }
+    .question-text { font-size: 16px; line-height: 1.65; text-align: left; margin-bottom: 15px; color: #1e293b; font-weight: 500; }
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-row .btn { margin: 0; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>JEE Physics Practice</h1>
+    <h1>JEE Complete Physics</h1>
+    <p style="margin-bottom: 12px; font-size: 13px;">20 Chapters • 6,000+ Dynamic JEE Numericals</p>
 
-    <!-- Class & Chapter Selection -->
     <div class="controls">
       <select id="classSelect" onchange="updateChapters()">
-        <option value="11">Class 11</option>
-        <option value="12">Class 12</option>
+        <option value="11">Class 11 (10 Chapters)</option>
+        <option value="12">Class 12 (10 Chapters)</option>
       </select>
       <select id="chapterSelect" onchange="resetAndGenerate()"></select>
     </div>
 
-    <!-- Question Number & Live Timer -->
     <div class="status-bar">
-      <span id="qNumber">Question: 1</span>
+      <span id="qNumber">Q. 1</span>
       <span id="timer">Time: 00:00</span>
     </div>
 
-    <!-- Question & Options -->
-    <div id="question" class="question-text">Loading...</div>
+    <div id="question" class="question-text">Loading question...</div>
     <div id="options"></div>
-    <p id="result" style="font-weight: bold; font-size: 16px;"></p>
+    <p id="result" style="font-weight: 700; font-size: 15px; margin-top: 12px;"></p>
 
-    <!-- Detailed Solution -->
     <div id="solution-box">
       <strong>Detailed Solution:</strong>
       <div id="solution-text" style="margin-top: 8px; line-height: 1.6;"></div>
     </div>
 
-    <!-- Navigation Buttons -->
-    <div style="margin-top: 20px;">
-      <button class="btn" onclick="nextQuestion()">Next Question</button>
-      <a href="index.html" class="btn" style="background:#6c757d;">Home</a>
+    <div class="btn-row">
+      <button class="btn" onclick="nextQuestion()">Next Question →</button>
+      <a href="index.html" class="btn" style="background: #475569; box-shadow: none;">Home</a>
     </div>
   </div>
 
   <script>
     const chapters = {
       "11": [
-        { id: "kinematics", name: "Kinematics (Projectile Motion)" },
-        { id: "nlm", name: "Laws of Motion" },
-        { id: "wep", name: "Work, Energy & Power" }
+        { id: "units", name: "1. Units & Measurements" },
+        { id: "kinematics", name: "2. Kinematics (1D & 2D)" },
+        { id: "nlm", name: "3. Laws of Motion" },
+        { id: "wep", name: "4. Work, Energy & Power" },
+        { id: "rotational", name: "5. Rotational Motion" },
+        { id: "gravitation", name: "6. Gravitation" },
+        { id: "solids_fluids", name: "7. Solids & Fluid Mechanics" },
+        { id: "thermo", name: "8. Thermodynamics & KTG" },
+        { id: "shm", name: "9. Oscillations (SHM)" },
+        { id: "waves", name: "10. Waves & Sound" }
       ],
       "12": [
-        { id: "electrostatics", name: "Electrostatics" },
-        { id: "current", name: "Current Electricity" },
-        { id: "optics", name: "Ray Optics" }
+        { id: "electrostatics", name: "1. Electrostatics & Capacitance" },
+        { id: "current", name: "2. Current Electricity" },
+        { id: "magnetism", name: "3. Moving Charges & Magnetism" },
+        { id: "emi", name: "4. EMI & Alternating Current" },
+        { id: "emwaves", name: "5. Electromagnetic Waves" },
+        { id: "ray_optics", name: "6. Ray Optics" },
+        { id: "wave_optics", name: "7. Wave Optics" },
+        { id: "modern", name: "8. Dual Nature & Atoms" },
+        { id: "nuclei", name: "9. Nuclei & Radioactivity" },
+        { id: "semiconductors", name: "10. Semiconductors & Logic Gates" }
       ]
     };
 
-    let qCount = 0;
-    let seconds = 0;
-    let timerInterval;
-    let currentAns = "";
-    let answered = false;
+    let qCount = 0, seconds = 0, timerInterval, currentAns = "", answered = false, lastIdx = -1;
+
+    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function pick(arr) { return arr[rand(0, arr.length - 1)]; }
 
     function updateChapters() {
       const cls = document.getElementById("classSelect").value;
@@ -90,126 +101,106 @@
       document.getElementById("timer").innerText = "Time: 00:00";
       timerInterval = setInterval(() => {
         seconds++;
-        let mins = String(Math.floor(seconds / 60)).padStart(2, '0');
-        let secs = String(seconds % 60).padStart(2, '0');
-        document.getElementById("timer").innerText = `Time: ${mins}:${secs}`;
+        let m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        let s = String(seconds % 60).padStart(2, '0');
+        document.getElementById("timer").innerText = `Time: ${m}:${s}`;
       }, 1000);
     }
 
-    function resetAndGenerate() {
-      qCount = 0;
-      nextQuestion();
-    }
-
-    function rand(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+    function resetAndGenerate() { qCount = 0; lastIdx = -1; nextQuestion(); }
 
     function nextQuestion() {
-      qCount++;
-      answered = false;
-      document.getElementById("qNumber").innerText = `Question: ${qCount}`;
+      qCount++; answered = false;
+      document.getElementById("qNumber").innerText = `Q. ${qCount}`;
       document.getElementById("result").innerText = "";
       document.getElementById("solution-box").style.display = "none";
       startTimer();
 
       const chapter = document.getElementById("chapterSelect").value;
-      let qData = generateByChapter(chapter);
+      const pool = getTemplates(chapter);
+      let idx = rand(0, pool.length - 1);
+      if (pool.length > 1 && idx === lastIdx) idx = (idx + 1) % pool.length;
+      lastIdx = idx;
 
+      let qData = pool[idx]();
       document.getElementById("question").innerHTML = qData.q;
       document.getElementById("solution-text").innerHTML = qData.sol;
       currentAns = qData.ans;
 
-      let choices = [...qData.opts].sort(() => Math.random() - 0.5);
+      let choices = [...new Set(qData.opts)].slice(0, 4).sort(() => Math.random() - 0.5);
       let optHTML = "";
       choices.forEach(opt => {
         optHTML += `<button class="option" onclick="checkAns('${opt}')">${opt}</button>`;
       });
       document.getElementById("options").innerHTML = optHTML;
-
       if (window.MathJax) MathJax.typesetPromise();
     }
 
-    function generateByChapter(chapter) {
-      if (chapter === "kinematics") {
-        let u = rand(2, 6) * 10; // 20, 30, 40, 50, 60
-        let g = 10;
-        let h = (u * u) / (2 * g);
-        return {
-          q: `Ek ball ko ground se \\( u = ${u}\\text{ m/s} \\) ki velocity se vertically upward phenka jata hai. Maximum height kya hogi? (Take \\( g = 10\\text{ m/s}^2 \\))`,
-          ans: `${h} m`,
-          opts: [`${h} m`, `${h + 15} m`, `${h * 2} m`, `${Math.abs(h - 10)} m`],
-          sol: `1. Maximum height par final velocity \\( v = 0 \\) hoti hai.<br>
-                2. Formula: \\( v^2 = u^2 - 2gH \\)<br>
-                3. \\( 0 = (${u})^2 - 2(10)H \\implies H = \\frac{${u*u}}{20} = ${h}\\text{ m} \\)`
-        };
-      }
-      else if (chapter === "nlm") {
-        let m = rand(2, 10);
-        let a = rand(2, 6);
-        let f = rand(30, 60);
-        let netF = m * a;
-        let friction = f - netF;
-        return {
-          q: `Ek \\( ${m}\\text{ kg} \\) ke block par horizontal force \\( F = ${f}\\text{ N} \\) lagane par woh \\( a = ${a}\\text{ m/s}^2 \\) ke acceleration se chalta hai. Surface dwara lagaya gaya kinetic friction force kitna hoga?`,
-          ans: `${friction} N`,
-          opts: [`${friction} N`, `${netF} N`, `${f + netF} N`, `${friction + 8} N`],
-          sol: `1. Net force formula: \\( F_{\\text{net}} = F - f_k = m \\cdot a \\)<br>
-                2. \\( ${f} - f_k = ${m} \\times ${a} = ${netF}\\text{ N} \\)<br>
-                3. \\( f_k = ${f} - ${netF} = ${friction}\\text{ N} \\)`
-        };
-      }
-      else if (chapter === "wep") {
-        let m = rand(2, 8);
-        let v1 = rand(2, 5);
-        let v2 = v1 + rand(3, 6);
-        let work = 0.5 * m * (v2 * v2 - v1 * v1);
-        return {
-          q: `Ek \\( ${m}\\text{ kg} \\) ke particle ki speed \\( ${v1}\\text{ m/s} \\) se badhkar \\( ${v2}\\text{ m/s} \\) ho jati hai. Sabhi forces dwara kiya gaya net work done kya hoga?`,
-          ans: `${work} J`,
-          opts: [`${work} J`, `${work + 20} J`, `${0.5 * m * v2 * v2} J`, `${Math.abs(work - 12)} J`],
-          sol: `1. Work-Energy Theorem ke anusar: \\( W_{\\text{net}} = \\Delta K = \\frac{1}{2}m(v_2^2 - v_1^2) \\)<br>
-                2. \\( W = \\frac{1}{2} \\times ${m} \\times (${v2}^2 - ${v1}^2) \\)<br>
-                3. \\( W = ${0.5 * m} \\times (${v2*v2} - ${v1*v1}) = ${work}\\text{ J} \\)`
-        };
-      }
-      else if (chapter === "electrostatics") {
-        let q1 = rand(2, 6); // in microCoulomb
-        let q2 = rand(2, 5);
-        let r = rand(1, 3); // in meters
-        let force = (9 * q1 * q2) / (r * r); // in mN (10^-3 N)
-        let forceFormatted = Number.isInteger(force) ? force : force.toFixed(2);
-        return {
-          q: `Do point charges \\( q_1 = ${q1}\\,\\mu\\text{C} \\) aur \\( q_2 = ${q2}\\,\\mu\\text{C} \\) air mein \\( r = ${r}\\text{ m} \\) ki doori par rakhe hain. Unke beech electrostatic force kitna hoga? (\\( k = 9 \\times 10^9\\text{ N}\\cdot\\text{m}^2/\\text{C}^2 \\))`,
-          ans: `${forceFormatted} mN`,
-          opts: [`${forceFormatted} mN`, `${(force * 2).toFixed(1)} mN`, `${(force + 5).toFixed(1)} mN`, `${(force / 2).toFixed(2)} mN`],
-          sol: `1. Coulomb's Law: \\( F = \\frac{k q_1 q_2}{r^2} \\)<br>
-                2. \\( F = \\frac{9 \\times 10^9 \\times (${q1} \\times 10^{-6}) \\times (${q2} \\times 10^{-6})}{${r}^2} \\)<br>
-                3. \\( F = \\frac{${9 * q1 * q2}}{${r * r}} \\times 10^{-3}\\text{ N} = ${forceFormatted}\\text{ mN} \\)`
-        };
-      }
-      else if (chapter === "current") {
-        let r1 = rand(2, 6) * 2;
-        let r2 = r1;
-        let v = rand(6, 18);
-        let req = (r1 * r2) / (r1 + r2);
-        let current = (v / req).toFixed(2);
-        return {
-          q: `Do resistors \\( R_1 = ${r1}\\,\\Omega \\) aur \\( R_2 = ${r2}\\,\\Omega \\) ko parallel mein ek \\( ${v}\\text{ V} \\) ki battery se joda gaya hai. Circuit mein total current kitna flow hoga?`,
-          ans: `${current} A`,
-          opts: [`${current} A`, `${(v / (r1 + r2)).toFixed(2)} A`, `${(parseFloat(current) + 1.5).toFixed(2)} A`, `${(parseFloat(current) * 2).toFixed(2)} A`],
-          sol: `1. Parallel combination mein equivalent resistance: \\( R_{\\text{eq}} = \\frac{R_1 R_2}{R_1 + R_2} = \\frac{${r1} \\times ${r2}}{${r1 + r2}} = ${req}\\,\\Omega \\)<br>
-                2. Ohm's Law se total current: \\( I = \\frac{V}{R_{\\text{eq}}} = \\frac{${v}}{${req}} = ${current}\\text{ A} \\)`
-        };
-      }
-      else if (chapter === "optics") {
-        let f = -rand(10, 20); // concave mirror focal length
-        let u = -(Math.abs(f) + rand(10, 20));
-        let v = (u * f) / (u - f);
-        let vFormatted = Number.isInteger(v) ? v : v.toFixed(1);
-        return {
-          q: `Ek concave mirror ki focal length \\( ${Math.abs(f)}\\text{ cm} \\) hai. Ek object ko mirror ke saamne \\( ${Math.abs(u)}\\text{ cm} \\) ki doori par rakha gaya hai. Image ki position (\\( v \\)) kya hogi?`,
-          ans: `${vFormatted} cm`,
-          opts: [`${vFormatted} cm`, `${Math.abs(vFormatted)} cm`, `${(v - 8).toFixed(1)} cm`, `${(v + 12).toFixed(1)} cm`],
-          sol: `1. Sign convention ke saath: \\( f = ${f}\\text{ cm} \\), \\( u = ${u}\\text{ cm} \\)<br>
+    function getTemplates(ch) {
+      const db = {
+        // ==================== CLASS 11 ====================
+        units: [
+          () => {
+            let a = rand(1, 3), b = rand(1, 3), c = rand(1, 2);
+            let ea = rand(1, 3), eb = rand(1, 3), ec = rand(1, 4);
+            let err = a * ea + b * eb + c * ec;
+            return {
+              q: `Ek physical quantity \\( X = \\frac{A^${a} B^${b}}{C^${c}} \\) hai. Agar \\( A, B, C \\) mein percentage errors kramashah \\( ${ea}\\%, ${eb}\\%, ${ec}\\% \\) hain, toh \\( X \\) mein maximum percentage error kya hoga?`,
+              ans: `${err}%`, opts: [`${err}%`, `${a*ea + b*eb - c*ec}%`, `${ea + eb + ec}%`, `${err + 3}%`],
+              sol: `\\( \\frac{\\Delta X}{X}\\% = ${a}(\\frac{\\Delta A}{A}\\%) + ${b}(\\frac{\\Delta B}{B}\\%) + ${c}(\\frac{\\Delta C}{C}\\%) = ${a}(${ea}) + ${b}(${eb}) + ${c}(${ec}) = ${err}\\% \\)`
+            };
+          },
+          () => {
+            let items = [
+              { name: "Planck's Constant (h)", dim: "[ML²T⁻¹]", opts: ["[ML²T⁻¹]", "[ML²T⁻²]", "[MLT⁻¹]", "[M⁰L²T⁻¹]"] },
+              { name: "Surface Tension", dim: "[ML⁰T⁻²]", opts: ["[ML⁰T⁻²]", "[ML⁻¹T⁻²]", "[MLT⁻²]", "[ML²T⁻²]"] },
+              { name: "Coefficient of Viscosity (η)", dim: "[ML⁻¹T⁻¹]", opts: ["[ML⁻¹T⁻¹]", "[ML⁻¹T⁻²]", "[MLT⁻¹]", "[M⁻¹LT⁻¹]"] },
+              { name: "Gravitational Constant (G)", dim: "[M⁻¹L³T⁻²]", opts: ["[M⁻¹L³T⁻²]", "[ML³T⁻²]", "[M⁻¹L²T⁻²]", "[ML²T⁻²]"] }
+            ];
+            let it = pick(items);
+            return {
+              q: `${it.name} ka dimensional formula kya hota hai?`,
+              ans: it.dim, opts: it.opts,
+              sol: `Standard dimensional formula of ${it.name} is \\( ${it.dim} \\).`
+            };
+          }
+        ],
+        kinematics: [
+          () => {
+            let u = rand(2, 7) * 10, h = (u * u) / 20;
+            return {
+              q: `Ek ball ko vertically upward \\( u = ${u}\\text{ m/s} \\) se phenka gaya. Maximum height kya hogi? (\\( g = 10\\text{ m/s}^2 \\))`,
+              ans: `${h} m`, opts: [`${h} m`, `${h*2} m`, `${h+15} m`, `${Math.abs(h-10)} m`],
+              sol: `\\( H = \\frac{u^2}{2g} = \\frac{${u}^2}{20} = ${h}\\text{ m} \\)`
+            };
+          },
+          () => {
+            let u = rand(2, 5) * 10, r = (u * u) / 10;
+            return {
+              q: `Ek projectile ko \\( 45^\\circ \\) par \\( ${u}\\text{ m/s} \\) se fire kiya gaya. Maximum horizontal range kitni hogi? (\\( g = 10\\text{ m/s}^2 \\))`,
+              ans: `${r} m`, opts: [`${r} m`, `${r/2} m`, `${r+20} m`, `${r*2} m`],
+              sol: `\\( R_{\\max} = \\frac{u^2}{g} = \\frac{${u}^2}{10} = ${r}\\text{ m} \\)`
+            };
+          },
+          () => {
+            let a = rand(2, 6), t = rand(2, 5), v = 3 * a * t * t;
+            return {
+              q: `Particle ki position \\( x = ${a}t^3 \\) hai. \\( t = ${t}\\text{ s} \\) par instantaneous velocity kya hogi?`,
+              ans: `${v} m/s`, opts: [`${v} m/s`, `${a*t*t} m/s`, `${6*a*t} m/s`, `${v+9} m/s`],
+              sol: `\\( v = \\frac{dx}{dt} = ${3*a}t^2 \\implies v(${t}) = ${3*a}(${t})^2 = ${v}\\text{ m/s} \\)`
+            };
+          }
+        ],
+        nlm: [
+          () => {
+            let m = rand(2, 8), a = rand(2, 5), f = rand(35, 65), fk = f - m * a;
+            return {
+              q: `Ek \\( ${m}\\text{ kg} \\) block par \\( ${f}\\text{ N} \\) force lagane par acceleration \\( ${a}\\text{ m/s}^2 \\) hai. Kinetic friction force kya hoga?`,
+              ans: `${fk} N`, opts: [`${fk} N`, `${m*a} N`, `${f+m*a} N`, `${fk+5} N`],
+              sol: `\\( F - f_k = ma \\implies f_k = ${f} - (${m} \\times ${a}) = ${fk}\\text{ N} \\)`
+            };
+          },
+          () => {
+            let m1 = rand(2, 4), m2 = rand(6, 10), a = (((m2 - m1) / (m1 + m2)) * 10).toFixed(2);
+            return {
     
