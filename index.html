@@ -3,35 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JEE Practice Portal</title>
+  <title>JEEQuest - Mock Test & Practice</title>
   <script src="https://polyfill.io"></script>
   <script id="MathJax-script" async src="https://jsdelivr.net"></script>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f1f5f9; display: flex; justify-content: center; padding: 20px; margin: 0; }
-    .container { background: #ffffff; padding: 30px; border-radius: 14px; max-width: 650px; width: 100%; box-shadow: 0 6px 20px rgba(0,0,0,0.08); margin-top: 20px; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f1f5f9; display: flex; justify-content: center; padding: 15px; margin: 0; }
+    .container { background: #ffffff; padding: 28px; border-radius: 14px; max-width: 680px; width: 100%; box-shadow: 0 6px 24px rgba(0,0,0,0.08); margin-top: 15px; }
     h1 { color: #0f172a; text-align: center; margin-bottom: 5px; font-size: 26px; }
-    .subtitle { text-align: center; color: #64748b; margin-bottom: 25px; font-size: 15px; }
-    .breadcrumb { background: #e2e8f0; color: #334155; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; margin-bottom: 20px; display: inline-block; }
+    .subtitle { text-align: center; color: #64748b; margin-bottom: 22px; font-size: 15px; }
+    .breadcrumb { background: #e2e8f0; color: #334155; padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; margin-bottom: 18px; display: inline-block; }
     .grid-btn { display: block; width: 100%; padding: 16px; margin: 12px 0; background: #2563eb; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: 600; cursor: pointer; text-align: left; transition: 0.2s; }
     .grid-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
     .chapter-btn { background: #f8fafc; color: #1e293b; border: 1px solid #cbd5e1; }
     .chapter-btn:hover { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; }
     .option-btn { display: block; width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; text-align: left; cursor: pointer; font-size: 16px; transition: 0.15s; }
-    .option-btn:hover { background: #f8fafc; border-color: #94a3b8; }
+    .option-btn:hover:not(:disabled) { background: #f8fafc; border-color: #94a3b8; }
     .correct { background: #dcfce7 !important; border-color: #22c55e !important; color: #14532d; font-weight: 600; }
     .wrong { background: #fee2e2 !important; border-color: #ef4444 !important; color: #7f1d1d; }
     .nav-row { display: flex; justify-content: space-between; margin-top: 20px; }
     .btn-secondary { background: #64748b; color: white; border: none; padding: 11px 18px; border-radius: 8px; cursor: pointer; font-size: 15px; }
     .btn-primary { background: #2563eb; color: white; border: none; padding: 11px 22px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; }
-    .header-bar { display: flex; justify-content: space-between; color: #64748b; font-size: 14px; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; color: #334155; font-size: 14px; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 15px; }
+    .timer-badge { background: #fef3c7; color: #b45309; padding: 5px 12px; border-radius: 20px; font-weight: 700; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+    .stat-card { background: #f8fafc; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <div id="class-screen">
-    <h1>JEE Practice Portal</h1>
-    <p class="subtitle" id="loading-status">Loading 5,200+ questions...</p>
+    <h1>JEEQuest Portal</h1>
+    <p class="subtitle" id="loading-status">Loading question bank...</p>
     <button class="grid-btn" onclick="selectClass('Class 11')">📘 Class 11 (JEE Main & Advanced)</button>
     <button class="grid-btn" onclick="selectClass('Class 12')">📗 Class 12 (JEE Main & Advanced)</button>
   </div>
@@ -39,7 +42,7 @@
   <div id="subject-screen" style="display:none;">
     <div class="breadcrumb" id="sub-breadcrumb"></div>
     <h1>Select Subject</h1>
-    <p class="subtitle">Choose a subject to view available chapters</p>
+    <p class="subtitle">Choose a subject for chapter-wise mock tests (+4 / -1)</p>
     <button class="grid-btn" onclick="selectSubject('Physics')">⚡ Physics</button>
     <button class="grid-btn" onclick="selectSubject('Chemistry')">🧪 Chemistry</button>
     <button class="grid-btn" onclick="selectSubject('Math')">📐 Mathematics</button>
@@ -49,20 +52,21 @@
   <div id="chapter-screen" style="display:none;">
     <div class="breadcrumb" id="chap-breadcrumb"></div>
     <h1>Select Chapter</h1>
-    <p class="subtitle">Pick a chapter to start the quiz</p>
+    <p class="subtitle">Each test picks up to 25 random questions</p>
     <div id="chapter-list"></div>
     <button class="btn-secondary" style="margin-top:15px;" onclick="showScreen('subject-screen')">← Back to Subject</button>
   </div>
 
   <div id="quiz-screen" style="display:none;">
     <div class="header-bar">
-      <span id="quiz-topic"></span>
       <span id="quiz-progress"></span>
+      <span class="timer-badge" id="timer-display">⏱️ 60:00</span>
     </div>
-    <h2 id="question-text" style="font-size:19px; color:#1e293b; line-height:1.5;"></h2>
+    <div style="font-size:13px; color:#64748b; margin-bottom:8px;" id="quiz-topic"></div>
+    <h2 id="question-text" style="font-size:18px; color:#1e293b; line-height:1.5;"></h2>
     <div id="options-container"></div>
     <div class="nav-row">
-      <button class="btn-secondary" onclick="showScreen('chapter-screen')">← Exit Quiz</button>
+      <button class="btn-secondary" onclick="endQuiz()">Finish Test</button>
       <button id="next-btn" class="btn-primary" style="display:none;" onclick="nextQuestion()">Next Question →</button>
     </div>
   </div>
@@ -75,7 +79,10 @@
   let selectedChapter = '';
   let currentQuestions = [];
   let currentIndex = 0;
-  let score = 0;
+  let correctCount = 0;
+  let wrongCount = 0;
+  let timerInterval;
+  let timeLeft = 3600;
 
   Promise.all([
     fetch('physics.json').then(r => r.json()),
@@ -86,8 +93,8 @@
     allQuestions = [...p, ...c, ...m];
     document.getElementById('loading-status').innerText = `Select your class (${allQuestions.length} Questions Ready)`;
   })
-  .catch(err => {
-    document.getElementById('loading-status').innerText = "Error loading question files! Check GitHub files.";
+  .catch(() => {
+    document.getElementById('loading-status').innerText = "Error loading question files!";
   });
 
   function showScreen(screenId) {
@@ -112,36 +119,51 @@
     const listDiv = document.getElementById('chapter-list');
     listDiv.innerHTML = '';
 
-    if (chapters.length === 0) {
-      listDiv.innerHTML = '<p style="text-align:center; color:#ef4444;">No chapters available yet for this selection.</p>';
-    } else {
-      chapters.forEach(chap => {
-        const count = filtered.filter(q => q.chapter === chap).length;
-        const btn = document.createElement('button');
-        btn.className = 'grid-btn chapter-btn';
-        btn.innerHTML = `${chap} <span style="float:right; font-size:13px; color:#64748b;">(${count} Qs)</span>`;
-        btn.onclick = () => startQuiz(chap);
-        listDiv.appendChild(btn);
-      });
-    }
+    chapters.forEach(chap => {
+      const count = filtered.filter(q => q.chapter === chap).length;
+      const btn = document.createElement('button');
+      btn.className = 'grid-btn chapter-btn';
+      btn.innerHTML = `${chap} <span style="float:right; font-size:13px; color:#64748b;">(${count} Qs)</span>`;
+      btn.onclick = () => startQuiz(chap);
+      listDiv.appendChild(btn);
+    });
     showScreen('chapter-screen');
   }
 
   function startQuiz(chap) {
     selectedChapter = chap;
-    currentQuestions = allQuestions.filter(q => 
+    let pool = allQuestions.filter(q => 
       q.class === selectedClass && q.subject === selectedSubject && q.chapter === selectedChapter
     );
+    // रैंडम शफ़ल करके अधिकतम 25 प्रश्न चुनें
+    pool.sort(() => Math.random() - 0.5);
+    currentQuestions = pool.slice(0, 25);
+    
     currentIndex = 0;
-    score = 0;
-    document.getElementById('quiz-topic').innerText = selectedChapter;
+    correctCount = 0;
+    wrongCount = 0;
+    timeLeft = currentQuestions.length * 120; // प्रति प्रश्न 2 मिनट
+    
+    document.getElementById('quiz-topic').innerText = `${selectedClass} • ${selectedSubject} • ${selectedChapter}`;
     showScreen('quiz-screen');
+    startTimer();
     showQuestion();
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      let mins = Math.floor(timeLeft / 60);
+      let secs = timeLeft % 60;
+      document.getElementById('timer-display').innerText = `⏱️ ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      if (timeLeft <= 0) endQuiz();
+    }, 1000);
   }
 
   function showQuestion() {
     const q = currentQuestions[currentIndex];
-    document.getElementById('quiz-progress').innerText = `Question ${currentIndex + 1} of ${currentQuestions.length}`;
+    document.getElementById('quiz-progress').innerText = `Question ${currentIndex + 1} / ${currentQuestions.length}`;
     document.getElementById('question-text').innerHTML = q.question;
     
     const optionsDiv = document.getElementById('options-container');
@@ -165,9 +187,10 @@
 
     if (selectedOpt === correctAnswer) {
       selectedBtn.classList.add('correct');
-      score++;
+      correctCount++;
     } else {
       selectedBtn.classList.add('wrong');
+      wrongCount++;
       buttons.forEach(b => {
         if (b.innerHTML === correctAnswer) b.classList.add('correct');
       });
@@ -180,20 +203,18 @@
     if (currentIndex < currentQuestions.length) {
       showQuestion();
     } else {
-      document.getElementById('quiz-screen').innerHTML = `
-        <h1>Quiz Completed! 🎉</h1>
-        <p class="subtitle">${selectedClass} • ${selectedSubject} • ${selectedChapter}</p>
-        <div style="text-align:center; padding:20px; background:#f8fafc; border-radius:10px; margin:20px 0;">
-          <span style="font-size:16px; color:#475569;">Your Final Score</span>
-          <h2 style="font-size:32px; color:#2563eb; margin:10px 0;">${score} / ${currentQuestions.length}</h2>
-        </div>
-        <div style="text-align:center;">
-          <button class="btn-primary" onclick="location.reload()">Practice Another Chapter</button>
-        </div>
-      `;
+      endQuiz();
     }
   }
-</script>
 
-</body>
-</html>
+  function endQuiz() {
+    clearInterval(timerInterval);
+    const totalMarks = (correctCount * 4) - (wrongCount * 1);
+    const maxMarks = currentQuestions.length * 4;
+    const attempted = correctCount + wrongCount;
+    const accuracy = attempted > 0 ? Math.round((correctCount / attempted) * 100) : 0;
+
+    document.getElementById('quiz-screen').innerHTML = `
+      <h1>Test Scorecard 📊</h1>
+      <p class="subtitle">${selectedChapter}</p>
+  
