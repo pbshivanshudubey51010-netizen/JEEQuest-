@@ -1,1 +1,59 @@
+[
+  {
+    "class": "Class 11",
+    "subject": "Physics",
+    "chapter": "Units and Measurements",
+    "question": "Which of the following is a dimensionless quantity?",
+    "options": ["Strain", "Stress", "Pressure", "Force"],
+    "answer": "Strain"
+  },
+  {
+    "class": "Class 11",
+    "subject": "Physics",
+    "chapter": "Kinematics",
+    "question": "A particle moves with a constant acceleration $a = 2\\text{ m/s}^2$ starting from rest. What is its velocity after $5\\text{ s}$?",
+    "options": ["$5\\text{ m/s}$", "$10\\text{ m/s}$", "$15\\text{ m/s}$", "$25\\text{ m/s}$"],
+    "answer": "$10\\text{ m/s}$"
+  },
+  {
+    "class": "Class 12",
+    "subject": "Physics",
+    "chapter": "Electrostatics",
+    "question": "What is the SI unit of Electric Flux?",
+    "options": ["$\\text{N}\\cdot\\text{m}^2/\\text{C}$", "$\\text{N}/\\text{C}$", "$\\text{J}/\\text{C}$", "$\\text{C}/\\text{m}^2$"],
+    "answer": "$\\text{N}\\cdot\\text{m}^2/\\text{C}$"
+  },
+  {
+    "class": "Class 11",
+    "subject": "Chemistry",
+    "chapter": "Atomic Structure",
+    "question": "What is the maximum number of electrons in a subshell with azimuthal quantum number $l = 2$?",
+    "options": ["2", "6", "10", "14"],
+    "answer": "10"
+  },
+  {
+    "class": "Class 12",
+    "subject": "Chemistry",
+    "chapter": "Chemical Kinetics",
+    "question": "What is the unit of rate constant $k$ for a first-order reaction?",
+    "options": ["$\\text{mol L}^{-1}\\text{s}^{-1}$", "$\\text{s}^{-1}$", "$\\text{L mol}^{-1}\\text{s}^{-1}$", "$\\text{L}^2\\text{mol}^{-2}\\text{s}^{-1}$"],
+    "answer": "$\\text{s}^{-1}$"
+  },
+  {
+    "class": "Class 11",
+    "subject": "Math",
+    "chapter": "Quadratic Equations",
+    "question": "If the roots of $x^2 - 5x + k = 0$ are equal, what is the value of $k$?",
+    "options": ["$25/4$", "$5$", "$25$", "$4/25$"],
+    "answer": "$25/4$"
+  },
+  {
+    "class": "Class 12",
+    "subject": "Math",
+    "chapter": "Integrals",
+    "question": "What is the value of $\\int_0^{\\pi/2} \\sin x \\, dx$?",
+    "options": ["$0$", "$1$", "$-1$", "$\\pi/2$"],
+    "answer": "$1$"
+  }
+]
 
