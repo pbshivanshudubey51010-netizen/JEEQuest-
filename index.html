@@ -29,15 +29,13 @@
 <body>
 
 <div class="container">
-  <!-- Screen 1: Select Class -->
   <div id="class-screen">
     <h1>JEE Practice Portal</h1>
-    <p class="subtitle">Select your class to begin chapter-wise practice</p>
+    <p class="subtitle" id="loading-status">Loading 5,200+ questions...</p>
     <button class="grid-btn" onclick="selectClass('Class 11')">📘 Class 11 (JEE Main & Advanced)</button>
     <button class="grid-btn" onclick="selectClass('Class 12')">📗 Class 12 (JEE Main & Advanced)</button>
   </div>
 
-  <!-- Screen 2: Select Subject -->
   <div id="subject-screen" style="display:none;">
     <div class="breadcrumb" id="sub-breadcrumb"></div>
     <h1>Select Subject</h1>
@@ -48,7 +46,6 @@
     <button class="btn-secondary" style="margin-top:15px;" onclick="showScreen('class-screen')">← Back to Class</button>
   </div>
 
-  <!-- Screen 3: Select Chapter -->
   <div id="chapter-screen" style="display:none;">
     <div class="breadcrumb" id="chap-breadcrumb"></div>
     <h1>Select Chapter</h1>
@@ -57,7 +54,6 @@
     <button class="btn-secondary" style="margin-top:15px;" onclick="showScreen('subject-screen')">← Back to Subject</button>
   </div>
 
-  <!-- Screen 4: Quiz Interface -->
   <div id="quiz-screen" style="display:none;">
     <div class="header-bar">
       <span id="quiz-topic"></span>
@@ -81,10 +77,18 @@
   let currentIndex = 0;
   let score = 0;
 
-  fetch('questions.json')
-    .then(res => res.json())
-    .then(data => { allQuestions = data; })
-    .catch(err => alert("Error loading questions.json! Please verify the file format."));
+  Promise.all([
+    fetch('physics.json').then(r => r.json()),
+    fetch('chemistry.json').then(r => r.json()),
+    fetch('math.json').then(r => r.json())
+  ])
+  .then(([p, c, m]) => {
+    allQuestions = [...p, ...c, ...m];
+    document.getElementById('loading-status').innerText = `Select your class (${allQuestions.length} Questions Ready)`;
+  })
+  .catch(err => {
+    document.getElementById('loading-status').innerText = "Error loading question files! Check GitHub files.";
+  });
 
   function showScreen(screenId) {
     ['class-screen', 'subject-screen', 'chapter-screen', 'quiz-screen'].forEach(id => {
@@ -192,5 +196,4 @@
 </script>
 
 </body>
-  </html>
-  
+</html>
