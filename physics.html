@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Complete JEE Physics Generator - Class 11 & 12</title>
+  <title>AI-Powered JEE Physics Generator</title>
   <link rel="stylesheet" href="style.css">
   <script id="MathJax-script" async src="https://jsdelivr.net"></script>
   <style>
-    .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
-    select { padding: 10px 12px; border-radius: 10px; border: 2px solid #e2e8f0; font-size: 14px; flex: 1; min-width: 140px; }
+    .ai-box { background: #eff6ff; border: 1.5px solid #93c5fd; padding: 10px; border-radius: 10px; margin-bottom: 14px; display: flex; gap: 8px; align-items: center; }
+    .ai-box input { flex: 1; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; }
+    .ai-badge { background: #2563eb; color: white; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
+    .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+    select { padding: 10px 12px; border-radius: 10px; border: 2px solid #e2e8f0; font-size: 14px; flex: 1; min-width: 135px; }
     .status-bar { display: flex; justify-content: space-between; background: #f1f5f9; padding: 10px 15px; border-radius: 10px; font-weight: 600; margin-bottom: 15px; color: #0f172a; font-size: 14px; }
     #solution-box { display: none; background: #f0fdf4; border-left: 4px solid #16a34a; padding: 15px; margin-top: 15px; text-align: left; border-radius: 8px; color: #14532d; font-size: 14px; }
     .question-text { font-size: 16px; line-height: 1.65; text-align: left; margin-bottom: 15px; color: #1e293b; font-weight: 500; }
@@ -18,15 +21,26 @@
 </head>
 <body>
   <div class="container">
-    <h1>JEE Complete Physics</h1>
-    <p style="margin-bottom: 12px; font-size: 13px;">20 Chapters • 6,000+ Dynamic JEE Numericals</p>
+    <h1>JEE AI Physics</h1>
+    <p style="margin-bottom: 12px; font-size: 13px;">Hybrid Engine: Built-in Bank + Live Gemini AI</p>
 
+    <!-- Live AI Key Box -->
+    <div class="ai-box">
+      <span class="ai-badge" id="modeBadge">Built-in Mode</span>
+      <input type="password" id="apiKeyInput" placeholder="Paste Gemini API Key for Unlimited AI Questions..." onchange="saveApiKey()">
+    </div>
+
+    <!-- Class, Unit & Difficulty Selection -->
     <div class="controls">
       <select id="classSelect" onchange="updateChapters()">
-        <option value="11">Class 11 (10 Chapters)</option>
-        <option value="12">Class 12 (10 Chapters)</option>
+        <option value="11">Class 11 (Units 1 - 10)</option>
+        <option value="12">Class 12 (Units 11 - 20)</option>
       </select>
       <select id="chapterSelect" onchange="resetAndGenerate()"></select>
+      <select id="levelSelect" onchange="resetAndGenerate()">
+        <option value="JEE Main">Level: JEE Main</option>
+        <option value="JEE Advanced">Level: JEE Advanced</option>
+      </select>
     </div>
 
     <div class="status-bar">
@@ -44,49 +58,55 @@
     </div>
 
     <div class="btn-row">
-      <button class="btn" onclick="nextQuestion()">Next Question →</button>
+      <button class="btn" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
       <a href="index.html" class="btn" style="background: #475569; box-shadow: none;">Home</a>
     </div>
   </div>
 
-  <script>
-    const chapters = {
-      "11": [
-        { id: "units", name: "1. Units & Measurements" },
-        { id: "kinematics", name: "2. Kinematics (1D & 2D)" },
-        { id: "nlm", name: "3. Laws of Motion" },
-        { id: "wep", name: "4. Work, Energy & Power" },
-        { id: "rotational", name: "5. Rotational Motion" },
-        { id: "gravitation", name: "6. Gravitation" },
-        { id: "solids_fluids", name: "7. Solids & Fluid Mechanics" },
-        { id: "thermo", name: "8. Thermodynamics & KTG" },
-        { id: "shm", name: "9. Oscillations (SHM)" },
-        { id: "waves", name: "10. Waves & Sound" }
-      ],
-      "12": [
-        { id: "electrostatics", name: "1. Electrostatics & Capacitance" },
-        { id: "current", name: "2. Current Electricity" },
-        { id: "magnetism", name: "3. Moving Charges & Magnetism" },
-        { id: "emi", name: "4. EMI & Alternating Current" },
-        { id: "emwaves", name: "5. Electromagnetic Waves" },
-        { id: "ray_optics", name: "6. Ray Optics" },
-        { id: "wave_optics", name: "7. Wave Optics" },
-        { id: "modern", name: "8. Dual Nature & Atoms" },
-        { id: "nuclei", name: "9. Nuclei & Radioactivity" },
-        { id: "semiconductors", name: "10. Semiconductors & Logic Gates" }
-      ]
-    };
+  <!-- Built-in Fallback Question Banks -->
+  <script src="phy-class11.js"></script>
+  <script src="phy-class12.js"></script>
 
+  <script>
     let qCount = 0, seconds = 0, timerInterval, currentAns = "", answered = false, lastIdx = -1;
 
     function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
     function pick(arr) { return arr[rand(0, arr.length - 1)]; }
 
+    // Load saved API key if present
+    window.onload = () => {
+      const savedKey = localStorage.getItem("gemini_jee_key");
+      if (savedKey) {
+        document.getElementById("apiKeyInput").value = savedKey;
+        updateBadge(true);
+      }
+      updateChapters();
+    };
+
+    function saveApiKey() {
+      const key = document.getElementById("apiKeyInput").value.trim();
+      if (key) {
+        localStorage.setItem("gemini_jee_key", key);
+        updateBadge(true);
+      } else {
+        localStorage.removeItem("gemini_jee_key");
+        updateBadge(false);
+      }
+      resetAndGenerate();
+    }
+
+    function updateBadge(isAI) {
+      const badge = document.getElementById("modeBadge");
+      badge.innerText = isAI ? "✨ Live AI Mode" : "Built-in Mode";
+      badge.style.background = isAI ? "#16a34a" : "#2563eb";
+    }
+
     function updateChapters() {
       const cls = document.getElementById("classSelect").value;
       const chapSelect = document.getElementById("chapterSelect");
       chapSelect.innerHTML = "";
-      chapters[cls].forEach(ch => {
+      const list = cls === "11" ? phyClass11Chapters : phyClass12Chapters;
+      list.forEach(ch => {
         let opt = document.createElement("option");
         opt.value = ch.id;
         opt.innerText = ch.name;
@@ -109,20 +129,65 @@
 
     function resetAndGenerate() { qCount = 0; lastIdx = -1; nextQuestion(); }
 
-    function nextQuestion() {
+    async function nextQuestion() {
       qCount++; answered = false;
       document.getElementById("qNumber").innerText = `Q. ${qCount}`;
       document.getElementById("result").innerText = "";
       document.getElementById("solution-box").style.display = "none";
-      startTimer();
+      
+      const apiKey = document.getElementById("apiKeyInput").value.trim();
+      const cls = document.getElementById("classSelect").value;
+      const chapSelect = document.getElementById("chapterSelect");
+      const unitId = chapSelect.value;
+      const unitName = chapSelect.options[chapSelect.selectedIndex]?.text || "Physics";
+      const level = document.getElementById("levelSelect").value;
 
-      const chapter = document.getElementById("chapterSelect").value;
-      const pool = getTemplates(chapter);
+      if (apiKey) {
+        // AI GENERATION MODE
+        document.getElementById("question").innerHTML = "✨ <em>AI naya JEE question bana raha hai...</em>";
+        document.getElementById("options").innerHTML = "";
+        document.getElementById("nextBtn").disabled = true;
+
+        try {
+          const prompt = `Generate 1 unique, high-quality ${level} Physics multiple-choice question from Class ${cls} "${unitName}". Use Hinglish or clear English. Format math equations with LaTeX \\( ... \\). Return ONLY valid JSON in this exact format: {"q": "question text", "opts": ["opt1", "opt2", "opt3", "opt4"], "ans": "exact matching string from opts", "sol": "step by step solution"}`;
+
+          const response = await fetch(`https://googleapis.com{apiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { responseMimeType: "application/json", temperature: 0.9 }
+            })
+          });
+
+          const data = await response.json();
+          const rawText = data.candidates[0].content.parts[0].text;
+          const qData = JSON.parse(rawText);
+          renderQuestion(qData);
+        } catch (err) {
+          console.error(err);
+          // Fallback to built-in if API fails or quota ends
+          loadBuiltInQuestion(cls, unitId);
+        } finally {
+          document.getElementById("nextBtn").disabled = false;
+        }
+      } else {
+        // BUILT-IN OFFLINE MODE
+        loadBuiltInQuestion(cls, unitId);
+      }
+    }
+
+    function loadBuiltInQuestion(cls, unitId) {
+      const db = cls === "11" ? phyClass11DB : phyClass12DB;
+      const pool = db[unitId] || db["u1"];
       let idx = rand(0, pool.length - 1);
       if (pool.length > 1 && idx === lastIdx) idx = (idx + 1) % pool.length;
       lastIdx = idx;
+      renderQuestion(pool[idx]());
+    }
 
-      let qData = pool[idx]();
+    function renderQuestion(qData) {
+      startTimer();
       document.getElementById("question").innerHTML = qData.q;
       document.getElementById("solution-text").innerHTML = qData.sol;
       currentAns = qData.ans;
@@ -130,77 +195,28 @@
       let choices = [...new Set(qData.opts)].slice(0, 4).sort(() => Math.random() - 0.5);
       let optHTML = "";
       choices.forEach(opt => {
-        optHTML += `<button class="option" onclick="checkAns('${opt}')">${opt}</button>`;
+        const safeOpt = opt.replace(/'/g, "\\'");
+        optHTML += `<button class="option" onclick="checkAns('${safeOpt}')">${opt}</button>`;
       });
       document.getElementById("options").innerHTML = optHTML;
       if (window.MathJax) MathJax.typesetPromise();
     }
 
-    function getTemplates(ch) {
-      const db = {
-        // ==================== CLASS 11 ====================
-        units: [
-          () => {
-            let a = rand(1, 3), b = rand(1, 3), c = rand(1, 2);
-            let ea = rand(1, 3), eb = rand(1, 3), ec = rand(1, 4);
-            let err = a * ea + b * eb + c * ec;
-            return {
-              q: `Ek physical quantity \\( X = \\frac{A^${a} B^${b}}{C^${c}} \\) hai. Agar \\( A, B, C \\) mein percentage errors kramashah \\( ${ea}\\%, ${eb}\\%, ${ec}\\% \\) hain, toh \\( X \\) mein maximum percentage error kya hoga?`,
-              ans: `${err}%`, opts: [`${err}%`, `${a*ea + b*eb - c*ec}%`, `${ea + eb + ec}%`, `${err + 3}%`],
-              sol: `\\( \\frac{\\Delta X}{X}\\% = ${a}(\\frac{\\Delta A}{A}\\%) + ${b}(\\frac{\\Delta B}{B}\\%) + ${c}(\\frac{\\Delta C}{C}\\%) = ${a}(${ea}) + ${b}(${eb}) + ${c}(${ec}) = ${err}\\% \\)`
-            };
-          },
-          () => {
-            let items = [
-              { name: "Planck's Constant (h)", dim: "[ML²T⁻¹]", opts: ["[ML²T⁻¹]", "[ML²T⁻²]", "[MLT⁻¹]", "[M⁰L²T⁻¹]"] },
-              { name: "Surface Tension", dim: "[ML⁰T⁻²]", opts: ["[ML⁰T⁻²]", "[ML⁻¹T⁻²]", "[MLT⁻²]", "[ML²T⁻²]"] },
-              { name: "Coefficient of Viscosity (η)", dim: "[ML⁻¹T⁻¹]", opts: ["[ML⁻¹T⁻¹]", "[ML⁻¹T⁻²]", "[MLT⁻¹]", "[M⁻¹LT⁻¹]"] },
-              { name: "Gravitational Constant (G)", dim: "[M⁻¹L³T⁻²]", opts: ["[M⁻¹L³T⁻²]", "[ML³T⁻²]", "[M⁻¹L²T⁻²]", "[ML²T⁻²]"] }
-            ];
-            let it = pick(items);
-            return {
-              q: `${it.name} ka dimensional formula kya hota hai?`,
-              ans: it.dim, opts: it.opts,
-              sol: `Standard dimensional formula of ${it.name} is \\( ${it.dim} \\).`
-            };
-          }
-        ],
-        kinematics: [
-          () => {
-            let u = rand(2, 7) * 10, h = (u * u) / 20;
-            return {
-              q: `Ek ball ko vertically upward \\( u = ${u}\\text{ m/s} \\) se phenka gaya. Maximum height kya hogi? (\\( g = 10\\text{ m/s}^2 \\))`,
-              ans: `${h} m`, opts: [`${h} m`, `${h*2} m`, `${h+15} m`, `${Math.abs(h-10)} m`],
-              sol: `\\( H = \\frac{u^2}{2g} = \\frac{${u}^2}{20} = ${h}\\text{ m} \\)`
-            };
-          },
-          () => {
-            let u = rand(2, 5) * 10, r = (u * u) / 10;
-            return {
-              q: `Ek projectile ko \\( 45^\\circ \\) par \\( ${u}\\text{ m/s} \\) se fire kiya gaya. Maximum horizontal range kitni hogi? (\\( g = 10\\text{ m/s}^2 \\))`,
-              ans: `${r} m`, opts: [`${r} m`, `${r/2} m`, `${r+20} m`, `${r*2} m`],
-              sol: `\\( R_{\\max} = \\frac{u^2}{g} = \\frac{${u}^2}{10} = ${r}\\text{ m} \\)`
-            };
-          },
-          () => {
-            let a = rand(2, 6), t = rand(2, 5), v = 3 * a * t * t;
-            return {
-              q: `Particle ki position \\( x = ${a}t^3 \\) hai. \\( t = ${t}\\text{ s} \\) par instantaneous velocity kya hogi?`,
-              ans: `${v} m/s`, opts: [`${v} m/s`, `${a*t*t} m/s`, `${6*a*t} m/s`, `${v+9} m/s`],
-              sol: `\\( v = \\frac{dx}{dt} = ${3*a}t^2 \\implies v(${t}) = ${3*a}(${t})^2 = ${v}\\text{ m/s} \\)`
-            };
-          }
-        ],
-        nlm: [
-          () => {
-            let m = rand(2, 8), a = rand(2, 5), f = rand(35, 65), fk = f - m * a;
-            return {
-              q: `Ek \\( ${m}\\text{ kg} \\) block par \\( ${f}\\text{ N} \\) force lagane par acceleration \\( ${a}\\text{ m/s}^2 \\) hai. Kinetic friction force kya hoga?`,
-              ans: `${fk} N`, opts: [`${fk} N`, `${m*a} N`, `${f+m*a} N`, `${fk+5} N`],
-              sol: `\\( F - f_k = ma \\implies f_k = ${f} - (${m} \\times ${a}) = ${fk}\\text{ N} \\)`
-            };
-          },
-          () => {
-            let m1 = rand(2, 4), m2 = rand(6, 10), a = (((m2 - m1) / (m1 + m2)) * 10).toFixed(2);
-            return {
-    
+    function checkAns(selected) {
+      if (answered) return;
+      answered = true;
+      clearInterval(timerInterval);
+      let res = document.getElementById("result");
+      if (selected === currentAns) {
+        res.style.color = "#16a34a";
+        res.innerText = `Sahi Jawab! (Time: ${seconds}s)`;
+      } else {
+        res.style.color = "#dc2626";
+        res.innerText = `Galat Jawab! Sahi uttar: ${currentAns}`;
+      }
+      document.getElementById("solution-box").style.display = "block";
+      if (window.MathJax) MathJax.typesetPromise();
+    }
+  </script>
+</body>
+</html>
