@@ -3,16 +3,194 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JEE Question Generator</title>
-  <link rel="stylesheet" href="style.css">
+  <title>JEE Practice Portal</title>
+  <script src="https://polyfill.io"></script>
+  <script id="MathJax-script" async src="https://jsdelivr.net"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f1f5f9; display: flex; justify-content: center; padding: 20px; margin: 0; }
+    .container { background: #ffffff; padding: 30px; border-radius: 14px; max-width: 650px; width: 100%; box-shadow: 0 6px 20px rgba(0,0,0,0.08); margin-top: 20px; }
+    h1 { color: #0f172a; text-align: center; margin-bottom: 5px; font-size: 26px; }
+    .subtitle { text-align: center; color: #64748b; margin-bottom: 25px; font-size: 15px; }
+    .breadcrumb { background: #e2e8f0; color: #334155; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; margin-bottom: 20px; display: inline-block; }
+    .grid-btn { display: block; width: 100%; padding: 16px; margin: 12px 0; background: #2563eb; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: 600; cursor: pointer; text-align: left; transition: 0.2s; }
+    .grid-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .chapter-btn { background: #f8fafc; color: #1e293b; border: 1px solid #cbd5e1; }
+    .chapter-btn:hover { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; }
+    .option-btn { display: block; width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; text-align: left; cursor: pointer; font-size: 16px; transition: 0.15s; }
+    .option-btn:hover { background: #f8fafc; border-color: #94a3b8; }
+    .correct { background: #dcfce7 !important; border-color: #22c55e !important; color: #14532d; font-weight: 600; }
+    .wrong { background: #fee2e2 !important; border-color: #ef4444 !important; color: #7f1d1d; }
+    .nav-row { display: flex; justify-content: space-between; margin-top: 20px; }
+    .btn-secondary { background: #64748b; color: white; border: none; padding: 11px 18px; border-radius: 8px; cursor: pointer; font-size: 15px; }
+    .btn-primary { background: #2563eb; color: white; border: none; padding: 11px 22px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; }
+    .header-bar { display: flex; justify-content: space-between; color: #64748b; font-size: 14px; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>JEE Question Generator</h1>
-    <p>Subject chunein aur chapter-wise practice shuru karein:</p>
-    <a href="physics.html" class="btn">⚡ Physics</a>
-    <a href="chemistry.html" class="btn">🧪 Chemistry</a>
-    <a href="maths.html" class="btn">📐 Mathematics</a>
+
+<div class="container">
+  <!-- Screen 1: Select Class -->
+  <div id="class-screen">
+    <h1>JEE Practice Portal</h1>
+    <p class="subtitle">Select your class to begin chapter-wise practice</p>
+    <button class="grid-btn" onclick="selectClass('Class 11')">📘 Class 11 (JEE Main & Advanced)</button>
+    <button class="grid-btn" onclick="selectClass('Class 12')">📗 Class 12 (JEE Main & Advanced)</button>
   </div>
+
+  <!-- Screen 2: Select Subject -->
+  <div id="subject-screen" style="display:none;">
+    <div class="breadcrumb" id="sub-breadcrumb"></div>
+    <h1>Select Subject</h1>
+    <p class="subtitle">Choose a subject to view available chapters</p>
+    <button class="grid-btn" onclick="selectSubject('Physics')">⚡ Physics</button>
+    <button class="grid-btn" onclick="selectSubject('Chemistry')">🧪 Chemistry</button>
+    <button class="grid-btn" onclick="selectSubject('Math')">📐 Mathematics</button>
+    <button class="btn-secondary" style="margin-top:15px;" onclick="showScreen('class-screen')">← Back to Class</button>
+  </div>
+
+  <!-- Screen 3: Select Chapter -->
+  <div id="chapter-screen" style="display:none;">
+    <div class="breadcrumb" id="chap-breadcrumb"></div>
+    <h1>Select Chapter</h1>
+    <p class="subtitle">Pick a chapter to start the quiz</p>
+    <div id="chapter-list"></div>
+    <button class="btn-secondary" style="margin-top:15px;" onclick="showScreen('subject-screen')">← Back to Subject</button>
+  </div>
+
+  <!-- Screen 4: Quiz Interface -->
+  <div id="quiz-screen" style="display:none;">
+    <div class="header-bar">
+      <span id="quiz-topic"></span>
+      <span id="quiz-progress"></span>
+    </div>
+    <h2 id="question-text" style="font-size:19px; color:#1e293b; line-height:1.5;"></h2>
+    <div id="options-container"></div>
+    <div class="nav-row">
+      <button class="btn-secondary" onclick="showScreen('chapter-screen')">← Exit Quiz</button>
+      <button id="next-btn" class="btn-primary" style="display:none;" onclick="nextQuestion()">Next Question →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allQuestions = [];
+  let selectedClass = '';
+  let selectedSubject = '';
+  let selectedChapter = '';
+  let currentQuestions = [];
+  let currentIndex = 0;
+  let score = 0;
+
+  fetch('questions.json')
+    .then(res => res.json())
+    .then(data => { allQuestions = data; })
+    .catch(err => alert("Error loading questions.json! Please verify the file format."));
+
+  function showScreen(screenId) {
+    ['class-screen', 'subject-screen', 'chapter-screen', 'quiz-screen'].forEach(id => {
+      document.getElementById(id).style.display = (id === screenId) ? 'block' : 'none';
+    });
+  }
+
+  function selectClass(cls) {
+    selectedClass = cls;
+    document.getElementById('sub-breadcrumb').innerText = selectedClass;
+    showScreen('subject-screen');
+  }
+
+  function selectSubject(sub) {
+    selectedSubject = sub;
+    document.getElementById('chap-breadcrumb').innerText = `${selectedClass} > ${selectedSubject}`;
+    
+    const filtered = allQuestions.filter(q => q.class === selectedClass && q.subject === selectedSubject);
+    const chapters = [...new Set(filtered.map(q => q.chapter))];
+    
+    const listDiv = document.getElementById('chapter-list');
+    listDiv.innerHTML = '';
+
+    if (chapters.length === 0) {
+      listDiv.innerHTML = '<p style="text-align:center; color:#ef4444;">No chapters available yet for this selection.</p>';
+    } else {
+      chapters.forEach(chap => {
+        const count = filtered.filter(q => q.chapter === chap).length;
+        const btn = document.createElement('button');
+        btn.className = 'grid-btn chapter-btn';
+        btn.innerHTML = `${chap} <span style="float:right; font-size:13px; color:#64748b;">(${count} Qs)</span>`;
+        btn.onclick = () => startQuiz(chap);
+        listDiv.appendChild(btn);
+      });
+    }
+    showScreen('chapter-screen');
+  }
+
+  function startQuiz(chap) {
+    selectedChapter = chap;
+    currentQuestions = allQuestions.filter(q => 
+      q.class === selectedClass && q.subject === selectedSubject && q.chapter === selectedChapter
+    );
+    currentIndex = 0;
+    score = 0;
+    document.getElementById('quiz-topic').innerText = selectedChapter;
+    showScreen('quiz-screen');
+    showQuestion();
+  }
+
+  function showQuestion() {
+    const q = currentQuestions[currentIndex];
+    document.getElementById('quiz-progress').innerText = `Question ${currentIndex + 1} of ${currentQuestions.length}`;
+    document.getElementById('question-text').innerHTML = q.question;
+    
+    const optionsDiv = document.getElementById('options-container');
+    optionsDiv.innerHTML = '';
+    document.getElementById('next-btn').style.display = 'none';
+
+    q.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerHTML = opt;
+      btn.onclick = () => checkAnswer(btn, opt, q.answer);
+      optionsDiv.appendChild(btn);
+    });
+
+    if (window.MathJax) MathJax.typesetPromise();
+  }
+
+  function checkAnswer(selectedBtn, selectedOpt, correctAnswer) {
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach(b => b.disabled = true);
+
+    if (selectedOpt === correctAnswer) {
+      selectedBtn.classList.add('correct');
+      score++;
+    } else {
+      selectedBtn.classList.add('wrong');
+      buttons.forEach(b => {
+        if (b.innerHTML === correctAnswer) b.classList.add('correct');
+      });
+    }
+    document.getElementById('next-btn').style.display = 'inline-block';
+  }
+
+  function nextQuestion() {
+    currentIndex++;
+    if (currentIndex < currentQuestions.length) {
+      showQuestion();
+    } else {
+      document.getElementById('quiz-screen').innerHTML = `
+        <h1>Quiz Completed! 🎉</h1>
+        <p class="subtitle">${selectedClass} • ${selectedSubject} • ${selectedChapter}</p>
+        <div style="text-align:center; padding:20px; background:#f8fafc; border-radius:10px; margin:20px 0;">
+          <span style="font-size:16px; color:#475569;">Your Final Score</span>
+          <h2 style="font-size:32px; color:#2563eb; margin:10px 0;">${score} / ${currentQuestions.length}</h2>
+        </div>
+        <div style="text-align:center;">
+          <button class="btn-primary" onclick="location.reload()">Practice Another Chapter</button>
+        </div>
+      `;
+    }
+  }
+</script>
+
 </body>
-</html>
+  </html>
+  
