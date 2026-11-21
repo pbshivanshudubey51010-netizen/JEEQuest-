@@ -1,1 +1,164 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Powered JEE Chemistry Generator</title>
+  <link rel="stylesheet" href="style.css">
+  <script id="MathJax-script" async src="https://jsdelivr.net"></script>
+  <style>
+    .ai-box { background: #fdf4ff; border: 1.5px solid #e879f9; padding: 10px; border-radius: 10px; margin-bottom: 14px; display: flex; gap: 8px; align-items: center; }
+    .ai-box input { flex: 1; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; }
+    .ai-badge { background: #9333ea; color: white; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
+    .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+    select { padding: 10px 12px; border-radius: 10px; border: 2px solid #e2e8f0; font-size: 14px; flex: 1; min-width: 135px; }
+    .status-bar { display: flex; justify-content: space-between; background: #f1f5f9; padding: 10px 15px; border-radius: 10px; font-weight: 600; margin-bottom: 15px; color: #0f172a; font-size: 14px; }
+    #solution-box { display: none; background: #f0fdf4; border-left: 4px solid #16a34a; padding: 15px; margin-top: 15px; text-align: left; border-radius: 8px; color: #14532d; font-size: 14px; }
+    .question-text { font-size: 16px; line-height: 1.65; text-align: left; margin-bottom: 15px; color: #1e293b; font-weight: 500; }
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-row .btn { margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>JEE AI Chemistry</h1>
+    <p style="margin-bottom: 12px; font-size: 13px;">Hybrid Engine: Built-in Bank + Live Gemini AI</p>
+
+    <div class="ai-box">
+      <span class="ai-badge" id="modeBadge">Built-in Mode</span>
+      <input type="password" id="apiKeyInput" placeholder="Paste Gemini API Key for Unlimited AI Questions..." onchange="saveApiKey()">
+    </div>
+
+    <div class="controls">
+      <select id="classSelect" onchange="updateChapters()">
+        <option value="11">Class 11</option>
+        <option value="12">Class 12</option>
+      </select>
+      <select id="chapterSelect" onchange="resetAndGenerate()"></select>
+      <select id="levelSelect" onchange="resetAndGenerate()">
+        <option value="JEE Main">Level: JEE Main</option>
+        <option value="JEE Advanced">Level: JEE Advanced</option>
+      </select>
+    </div>
+
+    <div class="status-bar">
+      <span id="qNumber">Q. 1</span>
+      <span id="timer">Time: 00:00</span>
+    </div>
+
+    <div id="question" class="question-text">Loading question...</div>
+    <div id="options"></div>
+    <p id="result" style="font-weight: 700; font-size: 15px; margin-top: 12px;"></p>
+
+    <div id="solution-box">
+      <strong>Detailed Solution:</strong>
+      <div id="solution-text" style="margin-top: 8px; line-height: 1.6;"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+      <a href="index.html" class="btn" style="background: #475569; box-shadow: none;">Home</a>
+    </div>
+  </div>
+
+  <script>
+    const chapters = {
+      "11": [
+        { id: "mole", name: "1. Some Basic Concepts (Mole)" },
+        { id: "atomic", name: "2. Atomic Structure" },
+        { id: "bonding", name: "3. Chemical Bonding" },
+        { id: "thermo", name: "4. Chemical Thermodynamics" },
+        { id: "equilibrium", name: "5. Equilibrium (Chemical & Ionic)" },
+        { id: "goc", name: "6. Organic Chemistry (GOC & Hydrocarbons)" }
+      ],
+      "12": [
+        { id: "solutions", name: "1. Solutions" },
+        { id: "electrochem", name: "2. Electrochemistry" },
+        { id: "kinetics", name: "3. Chemical Kinetics" },
+        { id: "coordination", name: "4. Coordination Compounds" },
+        { id: "organic12", name: "5. Haloalkanes, Alcohols & Carbonyls" },
+        { id: "amines", name: "6. Amines & Biomolecules" }
+      ]
+    };
+
+    const builtInDB = {
+      mole: () => {
+        let m = rand(2, 6), mass = m * 44;
+        return { q: `\\( ${mass}\\text{ g} \\) \\( \\text{CO}_2 \\) mein kitne moles honge? (Molar mass = 44 g/mol)`, ans: `${m} mol`, opts: [`${m} mol`, `${m*2} mol`, `${m+3} mol`, `${(m/2).toFixed(1)} mol`], sol: `\\( n = \\frac{\\text{Mass}}{\\text{Molar Mass}} = \\frac{${mass}}{44} = ${m}\\text{ mol} \\)` };
+      },
+      atomic: () => {
+        let n = rand(2, 4), e = (-13.6 / (n * n)).toFixed(2);
+        return { q: `Hydrogen atom ke \\( n = ${n} \\) orbit mein electron ki energy kya hogi?`, ans: `${e} eV`, opts: [`${e} eV`, `${Math.abs(e)} eV`, `${(-13.6/n).toFixed(2)} eV`, `-3.40 eV`], sol: `\\( E_n = -\\frac{13.6}{n^2} = -\\frac{13.6}{${n*n}} = ${e}\\text{ eV} \\)` };
+      },
+      bonding: () => {
+        let list = [
+          { q: "\\( \\text{SF}_6 \\) molecule ki hybridization aur geometry kya hoti hai?", a: "sp³d², Octahedral", o: ["sp³d², Octahedral", "sp³d, Trigonal bipyramidal", "sp³, Tetrahedral", "dsp², Square planar"], s: "6 bond pairs aur 0 lone pairs hone ke kaaran \\( sp^3d^2 \\) hybridization aur Octahedral geometry hoti hai." },
+          { q: "\\( \\text{NH}_3 \\) aur \\( \\text{NF}_3 \\) mein se kiska dipole moment zyada hota hai?", a: "NH₃", o: ["NH₃", "NF₃", "Dono ka barabar", "Zero hota hai"], s: "\\( \\text{NH}_3 \\) mein orbital dipole aur bond dipoles ek hi direction mein hote hain." }
+        ];
+        let it = list[rand(0, list.length - 1)];
+        return { q: it.q, ans: it.a, opts: it.o, sol: it.s };
+      },
+      thermo: () => {
+        let q = rand(200, 600), w = rand(50, 180), du = q - w;
+        return { q: `System ko \\( ${q}\\text{ J} \\) heat dene par woh \\( ${w}\\text{ J} \\) work karta hai. \\( \\Delta U \\) kya hoga?`, ans: `${du} J`, opts: [`${du} J`, `${q+w} J`, `-${du} J`, `${du+50} J`], sol: `\\( \\Delta U = q + w = ${q} - ${w} = ${du}\\text{ J} \\)` };
+      },
+      equilibrium: () => {
+        let p = rand(2, 6);
+        return { q: `\\( 10^{-${p}}\\text{ M} \\) \\( \\text{HCl} \\) aqueous solution ka pH kitna hoga?`, ans: `${p}`, opts: [`${p}`, `${14-p}`, `${p+1}`, `${p-1}`], sol: `\\( \\text{pH} = -\\log[10^{-${p}}] = ${p} \\)` };
+      },
+      goc: () => {
+        return { q: "Carbocations ki stability ka sahi decreasing order kya hai?", a: "3° > 2° > 1° > CH₃⁺", o: ["3° > 2° > 1° > CH₃⁺", "CH₃⁺ > 1° > 2° > 3°", "2° > 3° > 1° > CH₃⁺", "1° > 2° > 3° > CH₃⁺"], sol: "+I effect aur hyperconjugation badhne se carbocation ki stability badhti hai." };
+      },
+      solutions: () => {
+        let m = rand(1, 5), dtb = (0.52 * m).toFixed(2);
+        return { q: `\\( ${m}\\text{ m} \\) aqueous non-electrolyte solution ka \\( \\Delta T_b \\) kya hoga? (\\( K_b = 0.52 \\))`, ans: `${dtb} K`, opts: [`${dtb} K`, `${(dtb*2).toFixed(2)} K`, `${(parseFloat(dtb)+0.3).toFixed(2)} K`, `0.52 K`], sol: `\\( \\Delta T_b = K_b \\cdot m = 0.52 \\times ${m} = ${dtb}\\text{ K} \\)` };
+      },
+      electrochem: () => {
+        let ec = (rand(70, 95) / 100).toFixed(2), ea = -(rand(40, 80) / 100).toFixed(2);
+        let cell = (parseFloat(ec) - parseFloat(ea)).toFixed(2);
+        return { q: `Agar \\( E^\\circ_{\\text{cathode}} = +${ec}\\text{ V} \\) aur \\( E^\\circ_{\\text{anode}} = ${ea}\\text{ V} \\) hai, toh \\( E^\\circ_{\\text{cell}} \\) kya hoga?`, ans: `${cell} V`, opts: [`${cell} V`, `${(parseFloat(ec)+parseFloat(ea)).toFixed(2)} V`, `1.10 V`, `${(parseFloat(cell)-0.25).toFixed(2)} V`], sol: `\\( E^\\circ_{\\text{cell}} = E^\\circ_c - E^\\circ_a = ${ec} - (${ea}) = ${cell}\\text{ V} \\)` };
+      },
+      kinetics: () => {
+        let t = rand(10, 50), k = (0.693 / t).toFixed(4);
+        return { q: `First-order reaction ka \\( t_{1/2} = ${t}\\text{ min} \\) hai. Rate constant \\( k \\) kya hoga?`, ans: `${k} min⁻¹`, opts: [`${k} min⁻¹`, `${(1/t).toFixed(4)} min⁻¹`, `${(k*2).toFixed(4)} min⁻¹`, `0.0693 min⁻¹`], sol: `\\( k = \\frac{0.693}{t_{1/2}} = \\frac{0.693}{${t}} = ${k}\\text{ min}^{-1} \\)` };
+      },
+      coordination: () => {
+        return { q: `\\( [\\text{Fe}(\\text{CN})_6]^{4-} \\) complex mein Fe ka oxidation number kya hai?`, ans: "+2", opts: ["+2", "+3", "+4", "0"], sol: `\\( x + 6(-1) = -4 \\implies x = +2 \\)` };
+      },
+      organic12: () => {
+        return { q: "Aldehydes aur Ketones mein differentiate karne ke liye kaunsa test use hota hai?", a: "Tollens' Test", o: ["Tollens' Test", "Lucas Test", "Carbylamine Test", "Hinsberg Test"], sol: "Aldehydes Tollens' reagent ke saath silver mirror dete hain, ketones nahi dete." };
+      },
+      amines: () => {
+        return { q: "Primary amines (1°) ko identify karne ke liye kaunsi reaction use hoti hai?", a: "Carbylamine Reaction", o: ["Carbylamine Reaction", "Aldol Condensation", "Cannizzaro Reaction", "Wurtz Reaction"], sol: "Sirf primary amines chloroform aur alcoholic KOH ke saath foul-smelling isocyanide banate hain." };
+      }
+    };
+
+    let qCount = 0, seconds = 0, timerInterval, currentAns = "", answered = false;
+    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    window.onload = () => {
+      const savedKey = localStorage.getItem("gemini_jee_key");
+      if (savedKey) {
+        document.getElementById("apiKeyInput").value = savedKey;
+        updateBadge(true);
+      }
+      updateChapters();
+    };
+
+    function saveApiKey() {
+      const key = document.getElementById("apiKeyInput").value.trim();
+      if (key) {
+        localStorage.setItem("gemini_jee_key", key);
+        updateBadge(true);
+      } else {
+        localStorage.removeItem("gemini_jee_key");
+        updateBadge(false);
+      }
+      resetAndGenerate();
+    }
+
+    function updateBadge(isAI) {
+      const badge = document.getElementById("modeBadge");
+      badge.innerText = isAI ? "✨ Live AI Mode" : "Built-in Mode";
+    
